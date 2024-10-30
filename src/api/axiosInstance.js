@@ -1,25 +1,37 @@
-// src/api/axiosInstance.js
+// axiosInstance.js
 import axios from 'axios';
+import { AuthContext } from '../context/AuthContext';
+import React from 'react';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8080/api', 
+  baseURL: 'http://localhost:8080/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-axiosInstance.interceptors.request.use(
-  (config) => {
-    // localStorage에서 토큰을 가져옵니다.
-    const token = localStorage.getItem('token');
-    if (token) {
-      // 토큰이 존재하면 Authorization 헤더에 추가합니다.
-      config.headers['Authorization'] = `Bearer ${token}`;
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        const { data } = await axiosInstance.post('/refresh-token', { refreshToken });
+        localStorage.setItem('token', data.newAccessToken);
+        axiosInstance.defaults.headers['Authorization'] = `Bearer ${data.newAccessToken}`;
+        return axiosInstance(originalRequest);
+      } catch (e) {
+        console.error('토큰 갱신 실패:', e.message);
+        
+        // 로그아웃 처리
+        const { logout } = React.useContext(AuthContext);
+        if (logout) {
+          logout();
+        }
+      }
     }
-    return config;
-  },
-  (error) => {
-    // 요청 오류가 있는 경우 처리
     return Promise.reject(error);
   }
 );

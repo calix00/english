@@ -20,7 +20,7 @@ function Login() {
       navigate('/'); // 로그인 성공 시 메인 페이지로 이동
     } catch (error) {
       console.error('로그인 실패:', error.message);
-      setMessage('로그인에 실패하였습니다. 이메일과 비밀번호를 확인해주세요.');
+      setMessage('로그인에 실패하였습니다. 아이디와 비밀번호를 확인해주세요.');
     }
   };
 

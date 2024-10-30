@@ -1,19 +1,36 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import { login as apiLogin, signup as apiSignup } from '../api/authApi';
-
+import axiosInstance from '../api/axiosInstance';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token') || '');
+  const [user, setUser] = useState(null); // 사용자 정보 상태
+  const [token, setToken] = useState(localStorage.getItem('token') || ''); // 토큰 상태
+  const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refreshToken') || ''); // Refresh Token 상태
+
+  // 토큰 유효성 검사 함수
+  const validateToken = useCallback(async () => {
+    if (!token) return false;
+    try {
+      // 서버에 토큰 유효성 검사를 요청합니다.
+      await axiosInstance.get('/validate-token'); // 유효성 검사 엔드포인트는 '/validate-token'으로 가정합니다.
+      return true;
+    } catch (error) {
+      console.error('토큰 유효성 검사 실패:', error.message);
+      return false;
+    }
+  }, [token]);
 
   // 로그인 함수
   const login = async (credentials) => {
     try {
       const response = await apiLogin(credentials);
-      setUser(response.user);
-      setToken(response.token);
-      localStorage.setItem('token', response.token);
+      const { user, token, refreshToken } = response; // 서버 응답에서 사용자 정보와 토큰을 추출
+      setUser(user);
+      setToken(token);
+      setRefreshToken(refreshToken);
+      localStorage.setItem('token', token); // 토큰을 로컬 스토리지에 저장하여 상태 유지
+      localStorage.setItem('refreshToken', refreshToken); // Refresh Token을 로컬 스토리지에 저장
     } catch (error) {
       console.error('로그인 실패:', error.message);
       throw error;
@@ -23,7 +40,7 @@ export const AuthProvider = ({ children }) => {
   // 회원가입 함수
   const signup = async (userData) => {
     try {
-      await apiSignup(userData);
+      await apiSignup(userData); // 회원가입 API 호출
     } catch (error) {
       console.error('회원가입 실패:', error.message);
       throw error;
@@ -34,16 +51,45 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken('');
-    localStorage.removeItem('token');
+    setRefreshToken('');
+    localStorage.removeItem('token'); // 로컬 스토리지에서 토큰 제거
+    localStorage.removeItem('refreshToken'); // 로컬 스토리지에서 Refresh Token 제거
   };
+
+  // 토큰 갱신 함수
+  const refreshAccessToken = useCallback(async () => {
+    if (!refreshToken) return false;
+    try {
+      const response = await axiosInstance.post('/refresh-token', { refreshToken }); // Refresh Token을 사용해 새로운 Access Token 요청
+      const newAccessToken = response.data.token;
+      setToken(newAccessToken);
+      localStorage.setItem('token', newAccessToken);
+      return true;
+    } catch (error) {
+      console.error('토큰 갱신 실패:', error.message);
+      logout();
+      return false;
+    }
+  }, [refreshToken]);
 
   // 앱이 처음 시작될 때 로컬 스토리지에서 토큰을 가져와 사용자 상태 복원
   useEffect(() => {
-    if (token) {
-      // 실제 API 호출을 통해 토큰을 검증하고 사용자 데이터를 가져올 수 있음
-      setUser({ name: '사용자', id: 'exampleUser' }); // 여기서는 예시로 하드코딩된 데이터를 사용
-    }
-  }, [token]);
+    const initializeAuth = async () => {
+      if (token) {
+        const isValid = await validateToken();
+        if (isValid) {
+          // 실제로는 API 호출을 통해 사용자 데이터를 가져오는 것이 좋습니다.
+          setUser({ name: '사용자', id: 'exampleUser' }); // 예시로 하드코딩된 사용자 데이터 설정
+        } else {
+          const refreshed = await refreshAccessToken(); // 토큰이 유효하지 않으면 갱신 시도
+          if (!refreshed) {
+            logout(); // 갱신이 실패하면 로그아웃
+          }
+        }
+      }
+    };
+    initializeAuth();
+  }, [token, validateToken, refreshAccessToken]);
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout, signup }}>

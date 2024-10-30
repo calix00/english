@@ -14,9 +14,10 @@ export const signup = async (userData) => {
 export const login = async (credentials) => {
   try {
     const response = await axiosInstance.post('/login', credentials);
-    const token = response.data.token;
-    localStorage.setItem('token', token);
-    return response.data;
+    return {
+      user: response.data.user,
+      token: response.data.token,
+    };
   } catch (error) {
     throw new Error('로그인에 실패했습니다.');
   }
