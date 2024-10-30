@@ -24,6 +24,10 @@ function Login() {
     }
   };
 
+  const handleSignupNavigation = () => {
+    navigate('/signup'); // 회원가입 페이지로 이동
+  };
+
   return (
     <Container maxWidth="sm">
       <Box mt={8} p={4} boxShadow={3} borderRadius={2}>
@@ -52,7 +56,7 @@ function Login() {
               required
             />
           </Box>
-          <Box textAlign="center">
+          <Box textAlign="center" mb={2}>
             <Button type="submit" variant="contained" color="primary" size="large">
               로그인
             </Button>
@@ -63,6 +67,11 @@ function Login() {
             <Alert severity={message.includes('성공') ? 'success' : 'error'}>{message}</Alert>
           </Box>
         )}
+        <Box textAlign="center" mt={2}>
+          <Button variant="text" color="secondary" onClick={handleSignupNavigation}>
+            회원가입으로 이동
+          </Button>
+        </Box>
       </Box>
     </Container>
   );
