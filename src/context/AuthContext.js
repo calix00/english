@@ -7,6 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); // 사용자 정보 상태
   const [token, setToken] = useState(localStorage.getItem('token') || ''); // 토큰 상태
   const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refreshToken') || ''); // Refresh Token 상태
+  const [isAuthenticated, setIsAuthenticated] = useState(!!token); // 로그인 여부 상태
 
   // 토큰 유효성 검사 함수
   const validateToken = useCallback(async () => {
@@ -31,6 +32,7 @@ export const AuthProvider = ({ children }) => {
       setRefreshToken(refreshToken);
       localStorage.setItem('token', token); // 토큰을 로컬 스토리지에 저장하여 상태 유지
       localStorage.setItem('refreshToken', refreshToken); // Refresh Token을 로컬 스토리지에 저장
+      setIsAuthenticated(true); // 로그인 성공 시 인증 상태를 true로 설정
     } catch (error) {
       console.error('로그인 실패:', error.message);
       throw error;
@@ -54,6 +56,7 @@ export const AuthProvider = ({ children }) => {
     setRefreshToken('');
     localStorage.removeItem('token'); // 로컬 스토리지에서 토큰 제거
     localStorage.removeItem('refreshToken'); // 로컬 스토리지에서 Refresh Token 제거
+    setIsAuthenticated(false); // 로그아웃 시 인증 상태를 false로 설정
   };
 
   // 토큰 갱신 함수
@@ -64,6 +67,7 @@ export const AuthProvider = ({ children }) => {
       const newAccessToken = response.data.token;
       setToken(newAccessToken);
       localStorage.setItem('token', newAccessToken);
+      setIsAuthenticated(true); // 갱신 성공 시 인증 상태를 true로 유지
       return true;
     } catch (error) {
       console.error('토큰 갱신 실패:', error.message);
@@ -80,6 +84,7 @@ export const AuthProvider = ({ children }) => {
         if (isValid) {
           // 실제로는 API 호출을 통해 사용자 데이터를 가져오는 것이 좋습니다.
           setUser({ name: '사용자', id: 'exampleUser' }); // 예시로 하드코딩된 사용자 데이터 설정
+          setIsAuthenticated(true); // 토큰이 유효하면 로그인 상태 유지
         } else {
           const refreshed = await refreshAccessToken(); // 토큰이 유효하지 않으면 갱신 시도
           if (!refreshed) {
@@ -92,7 +97,7 @@ export const AuthProvider = ({ children }) => {
   }, [token, validateToken, refreshAccessToken]);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, signup }}>
+    <AuthContext.Provider value={{  isAuthenticated, user, token, login, logout, signup }}>
       {children}
     </AuthContext.Provider>
   );

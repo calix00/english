@@ -1,28 +1,25 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
-import { Box } from '@mui/system';
-
+import { Container, Box, Typography } from '@mui/material';
+import Sidebar from '../components/Sidebar'; // Sidebar 컴포넌트 임포트
+import TopNav from '../components/TopNav';
+import DashboardMenu from '../components/DashboardMenu';
 function MainPage() {
   return (
-    <div>
-      {/* 네비게이션 바 */}
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            MyApp
-          </Typography>
-          <Button color="inherit" component={Link} to="/login">
-            로그인
-          </Button>
-          <Button color="inherit" component={Link} to="/signup">
-            회원가입
-          </Button>
-        </Toolbar>
-      </AppBar>
+    <div style={{ display: 'flex' }}>
+      {/* 사이드바 */}
+      <Sidebar />
+
+      <div style={{ flex: 1 }}>
+        {/* 상단 네비게이션 바 */}
+        <TopNav />
+
+{/* Dashboard 메뉴 */}
+<Box sx={{ mt: 2, ml: 3 }}>
+          <DashboardMenu />
+        </Box>
 
       {/* 메인 콘텐츠 */}
-      <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Container maxWidth="md" sx={{ mt: 4, ml: 2 }}>
         <Box textAlign="center" mt={4}>
           <Typography variant="h3" gutterBottom>
             환영합니다!
@@ -32,6 +29,7 @@ function MainPage() {
           </Typography>
         </Box>
       </Container>
+    </div>
     </div>
   );
 }
