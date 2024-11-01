@@ -30,9 +30,7 @@ const Sidebar = () => {
       <h3 className="sidebar-title">Service</h3>
       <ul className="sidebar-section">
         <li className={isActive('/') ? 'active' : ''}>
-          <Link to="/" className="sidebar-link">
-            Dashboard <span className="notification-badge">3</span>
-          </Link>
+          <Link to="/" className="sidebar-link">Dashboard</Link>
         </li>
         <li className={isActive('/problems') ? 'active' : ''}>
           <Link to="/problems" className="sidebar-link">문제풀이 화면</Link>
@@ -46,8 +44,8 @@ const Sidebar = () => {
         <li className={isActive('/analysis') ? 'active' : ''}>
           <Link to="/analysis" className="sidebar-link">분석 or 피드백 화면</Link>
         </li>
-        <li className={isActive('/records') ? 'active' : ''}>
-          <Link to="/records" className="sidebar-link">학습 기록</Link>
+        <li className={isActive('/history') ? 'active' : ''}>
+          <Link to="/history" className="sidebar-link">학습 기록</Link>
         </li>
         <li className={isActive('/comparison') ? 'active' : ''}>
           <Link to="/comparison" className="sidebar-link">친구와 성적 비교</Link>
